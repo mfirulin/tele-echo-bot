@@ -90,6 +90,21 @@ public class Bot extends TelegramLongPollingBot {
         }
     }
 
+    private void handleMessage(Message msg) throws TelegramApiException {
+        var chatId = msg.getFrom().getId();
+        var msgId = msg.getMessageId();
+
+        if (msg.hasText()) {
+            String text = msg.getText();
+            if (screaming) {
+                text = text.toUpperCase();
+            }
+            sendText(chatId, text);
+        } else {
+            copyMessage(chatId, msgId);  // We can't really scream a sticker
+        }
+    }
+
     private void sendText(Long chatId, String text) throws TelegramApiException {
         var msg = SendMessage.builder()
             .chatId(chatId.toString()) // Who we are sending a message to
@@ -109,19 +124,15 @@ public class Bot extends TelegramLongPollingBot {
         execute(msg);
     }
 
-    private void handleMessage(Message msg) throws TelegramApiException {
+    private void handleCommand(Message msg) throws TelegramApiException {
         var chatId = msg.getFrom().getId();
-        var msgId = msg.getMessageId();
 
-        if (msg.hasText()) {
-            String text = msg.getText();
-            if (screaming) {
-                text = text.toUpperCase();
-            }
-            sendText(chatId, text);
-        } else {
-            copyMessage(chatId, msgId);  // We can't really scream a sticker
-        }
+        switch (msg.getText()) {
+            case "/scream" -> screaming = true; // If the command was /scream, we switch gears
+            case "/whisper" -> screaming = false; // Otherwise, we return to normal
+            case "/start" -> sendText(chatId, "Hello! I'm a test bot.");
+            case "/menu" -> sendMenu(chatId, "<b>Menu 1</b>", keyboardM1);
+        };
     }
 
     private void sendMenu(Long chatId, String txt, InlineKeyboardMarkup kb) throws TelegramApiException {
@@ -133,17 +144,6 @@ public class Bot extends TelegramLongPollingBot {
             .build();
     
         execute(msg);
-    }
-
-    private void handleCommand(Message msg) throws TelegramApiException {
-        var chatId = msg.getFrom().getId();
-
-        switch(msg.getText()) {
-            case "/scream" -> screaming = true; // If the command was /scream, we switch gears
-            case "/whisper" -> screaming = false; // Otherwise, we return to normal
-            case "/start" -> sendText(chatId, "Hello! I'm a test bot.");
-            case "/menu" -> sendMenu(chatId, "<b>Menu 1</b>", keyboardM1);
-        };
     }
 
     private void handleButton(CallbackQuery cb) throws TelegramApiException {
@@ -167,15 +167,15 @@ public class Bot extends TelegramLongPollingBot {
             case "next" -> {
                 newTxt.setText("Menu 2");
                 newKb.setReplyMarkup(keyboardM2);
-            }
-            case "back" -> {
+            } case "back" -> {
                 newTxt.setText("Menu 1");
                 newKb.setReplyMarkup(keyboardM1);
             }
         };
     
         var close = AnswerCallbackQuery.builder()
-            .callbackQueryId(queryId).build();
+            .callbackQueryId(queryId)
+            .build();
     
         execute(close);
         execute(newTxt);
