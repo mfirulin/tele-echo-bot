@@ -1,7 +1,8 @@
-package tele.echobot;
+package tele.echobot.service;
 
 import java.util.List;
 
+import org.springframework.stereotype.Component;
 import org.telegram.telegrambots.bots.TelegramLongPollingBot;
 import org.telegram.telegrambots.meta.api.methods.AnswerCallbackQuery;
 import org.telegram.telegrambots.meta.api.methods.CopyMessage;
@@ -15,7 +16,12 @@ import org.telegram.telegrambots.meta.api.objects.replykeyboard.InlineKeyboardMa
 import org.telegram.telegrambots.meta.api.objects.replykeyboard.buttons.InlineKeyboardButton;
 import org.telegram.telegrambots.meta.exceptions.TelegramApiException;
 
+import tele.echobot.config.Config;
+
+@Component
 public class Bot extends TelegramLongPollingBot {
+
+    private Config config;
 
     private boolean screaming = false;
     private InlineKeyboardButton nextButton;
@@ -24,7 +30,10 @@ public class Bot extends TelegramLongPollingBot {
     private InlineKeyboardMarkup keyboardM1;
     private InlineKeyboardMarkup keyboardM2;
 
-    public Bot() {
+    public Bot(Config config) {
+
+        this.config = config;
+
         // Create buttons
         nextButton = InlineKeyboardButton.builder()
             .text("Next")
@@ -55,12 +64,12 @@ public class Bot extends TelegramLongPollingBot {
 
     @Override
     public String getBotUsername() {
-        return "mfirulin_echo";
+        return config.getBotName();
     }
 
     @Override
     public String getBotToken() {
-        return "5914438112:AAHltPCX6W4Ws6PfrTJOyyBYYrJr76_Zcj8";
+        return config.getBotToken();
     }
 
     @Override
